@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
+  <meta name="theme-color" content="#0a0c0b" />
+  <meta name="color-scheme" content="dark" />
+  <meta name="description" content="Juega Texas Hold'em online con tus amigos. Gratis, sin registro y sin dinero real." />
+  <title>Flop · Póker con amigos</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230f5a3f'/%3E%3Ctext x='32' y='46' font-size='38' text-anchor='middle' fill='%23f2f4f3'%3E%E2%99%A0%3C/text%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js" defer></script>
+  <script type="module" src="js/app.js"></script>
+</head>
+<body>
+  <!-- Lobby -->
+  <main id="lobby" class="screen lobby">
+    <div class="lobby-card">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">
+          <span class="mini-card">A<i>♠</i></span>
+          <span class="mini-card red">K<i>♥</i></span>
+        </div>
+        <h1>Flop</h1>
+        <p>Texas Hold'em con tus amigos. Gratis, sin registro y solo con fichas de juego.</p>
+      </div>
+
+      <form id="lobby-form" class="lobby-form" autocomplete="off">
+        <label class="field">
+          <span>Tu nombre</span>
+          <input id="name" name="name" maxlength="16" required placeholder="Cómo te verán en la mesa"
+                 autocapitalize="words" autocorrect="off" spellcheck="false" enterkeyhint="go" />
+        </label>
+
+        <div class="segmented" role="tablist" data-value="create">
+          <span class="segmented-pill" aria-hidden="true"></span>
+          <button type="button" role="tab" data-tab="create" aria-selected="true">Crear mesa</button>
+          <button type="button" role="tab" data-tab="join" aria-selected="false">Unirme</button>
+        </div>
+
+        <div class="panel" data-panel="create">
+          <div class="option">
+            <span class="option-label">Fichas iniciales</span>
+            <div class="chips" data-name="stack">
+              <button type="button" data-v="500">500</button>
+              <button type="button" data-v="1000" aria-pressed="true">1.000</button>
+              <button type="button" data-v="2000">2.000</button>
+              <button type="button" data-v="5000">5.000</button>
+            </div>
+          </div>
+          <div class="option">
+            <span class="option-label">Ciegas</span>
+            <div class="chips" data-name="blinds">
+              <button type="button" data-v="5/10">5/10</button>
+              <button type="button" data-v="10/20" aria-pressed="true">10/20</button>
+              <button type="button" data-v="25/50">25/50</button>
+              <button type="button" data-v="50/100">50/100</button>
+            </div>
+          </div>
+          <div class="option">
+            <span class="option-label">Tiempo por turno</span>
+            <div class="chips" data-name="turnTime">
+              <button type="button" data-v="15">15 s</button>
+              <button type="button" data-v="30" aria-pressed="true">30 s</button>
+              <button type="button" data-v="45">45 s</button>
+              <button type="button" data-v="90">90 s</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel" data-panel="join" hidden>
+          <label class="field">
+            <span>Código de la mesa</span>
+            <input id="code" name="code" maxlength="5" placeholder="ABCDE" class="code-input"
+                   autocapitalize="characters" autocorrect="off" spellcheck="false" enterkeyhint="go" />
+          </label>
+        </div>
+
+        <button id="lobby-submit" class="btn btn-primary btn-lg" type="submit">
+          <span class="btn-label">Crear mesa</span>
+        </button>
+        <p class="hint" id="lobby-hint">Tu navegador hará de crupier automático: tú juegas igual que los demás.</p>
+      </form>
+    </div>
+  </main>
+
+  <!-- Game -->
+  <section id="game" class="screen game" hidden>
+    <header class="topbar">
+      <div class="topbar-left">
+        <span class="logo">Flop</span>
+        <button class="room-chip" id="invite" type="button" aria-label="Copiar enlace de invitación">
+          <span class="room-code" id="room-code">-----</span>
+          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M9 9h10v10H9zM5 15V5h10"/></svg>
+          <span class="room-chip-label">Invitar</span>
+        </button>
+        <span class="conn" id="conn" hidden></span>
+      </div>
+      <div class="topbar-right">
+        <span class="blinds-label" id="blinds-label"></span>
+        <button class="btn btn-ghost btn-sm" id="sit-toggle" type="button">Levantarme</button>
+        <button class="btn btn-ghost btn-sm" id="leave" type="button">Salir</button>
+      </div>
+    </header>
+
+    <div class="stage">
+      <div class="table" id="table">
+        <div class="rail"><div class="felt"></div></div>
+        <div class="center">
+          <div class="pot" id="pot"><span>Bote</span> <b id="pot-amount">0</b></div>
+          <div class="board" id="board"></div>
+          <div class="status" id="status" aria-live="polite"></div>
+        </div>
+        <div class="layer" id="seats"></div>
+      </div>
+    </div>
+
+    <footer class="dock" id="dock">
+      <div class="my-hand">
+        <div class="my-cards" id="my-cards"></div>
+        <div class="my-info">
+          <span class="my-hand-name" id="my-hand-name"></span>
+          <span class="my-stack" id="my-stack"></span>
+        </div>
+      </div>
+      <div class="controls" id="controls"></div>
+    </footer>
+  </section>
+
+  <div class="toasts" id="toasts" aria-live="polite"></div>
+</body>
+</html>
